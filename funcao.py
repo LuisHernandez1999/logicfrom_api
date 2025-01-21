@@ -1,5 +1,4 @@
-##### aqui uso as funçoes pra interagir com a classe 
-
+import sqlite3
 from classes import User
 
 def criar_user():
@@ -13,26 +12,43 @@ def criar_user():
         print("Senhas não são iguais. Por favor, tente novamente.")
         confirmacao_senha = input('Confirme sua senha: ')
     
-    print(f"Usuário criado com sucesso!\nNome: {nome} {sobrenome}\nEmail: {email}")
+    # conecta ao banco de dados
+    conexao = sqlite3.connect("usuarios.db")
+    cursor = conexao.cursor()
     
-   ##### a classe user 
-    return User(nome, sobrenome, email, senha)
+    # inserir o usuário no banco de dados
+    try:
+        cursor.execute('''
+            INSERT INTO users (nome, sobrenome, email, senha)
+            VALUES (?, ?, ?, ?)
+        ''', (nome, sobrenome, email, senha))
+        conexao.commit()
+        print(f"Usuário criado com sucesso!\nNome: {nome} {sobrenome}\nEmail: {email}")
+    except sqlite3.IntegrityError:
+        print(f"Erro: O email '{email}' já está em uso.")
+    finally:
+        conexao.close()
 
 def login():
-    email_cadastrado = input("entre seu email")
-    senha_confirmacao = input("entre sua senha ")      
-    
     email = input('Entre seu email: ')
-    while email != email_cadastrado:
-        print("Email incorreto. Tente novamente.")
-        email = input('Entre seu email: ')
-    print("Email confere.")
-
     senha = input('Entre sua senha: ')
-    while senha != senha_confirmacao:
-        print("Senha incorreta. Tente novamente.")
-        senha = input('Entre sua senha: ')
-    print("Login realizado com sucesso!")
+    
+    
+    conexao = sqlite3.connect("usuarios.db")
+    cursor = conexao.cursor()
+    
+   
+    cursor.execute('''
+        SELECT * FROM users WHERE email = ? AND senha = ?
+    ''', (email, senha))
+    user = cursor.fetchone()
+    conexao.close()
+    
+    if user:
+        print(f"Login realizado com sucesso! Bem-vindo(a), {User[1]}!")
+    else:
+        print("Email ou senha incorretos. Tente novamente.")
+
 
     
 
