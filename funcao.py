@@ -1,55 +1,32 @@
+#funcaos que irá ultilizar o classe
 import sqlite3
 from classes import User
 
-def criar_user():
-    nome = input('Entre seu nome: ')
-    sobrenome = input('Entre seu sobrenome: ')
-    email = input('Entre seu email: ')
-    senha = input('Entre sua senha: ')
+def criar_user(nome, sobrenome, email, senha):
+    print(f"Criando usuário {nome} {sobrenome}")
+    novo_usuario = User(nome, sobrenome, email, senha)
     
-    confirmacao_senha = input('Confirme sua senha: ')
-    while confirmacao_senha != senha:
-        print("Senhas não são iguais. Por favor, tente novamente.")
-        confirmacao_senha = input('Confirme sua senha: ')
-    
-    # conecta ao banco de dados
-    conexao = sqlite3.connect("usuarios.db")
-    cursor = conexao.cursor()
-    
-    # inserir o usuário no banco de dados
-    try:
+    with sqlite3.connect("usuarios.db") as conexao:
+        cursor = conexao.cursor()
+        try:
+            cursor.execute('''
+                INSERT INTO users (nome, sobrenome, email, senha)
+                VALUES (?, ?, ?, ?)
+            ''', (novo_usuario.nome, novo_usuario.sobrenome, novo_usuario.email, novo_usuario.senha))
+            conexao.commit()
+            print(f"Usuário {nome} {sobrenome} criado no banco de dados.")
+        except sqlite3.IntegrityError:
+            raise Exception(f"O email '{novo_usuario.email}' já está em uso.")
+
+def login(email, senha):
+    with sqlite3.connect("usuarios.db") as conexao:
+        cursor = conexao.cursor()
         cursor.execute('''
-            INSERT INTO users (nome, sobrenome, email, senha)
-            VALUES (?, ?, ?, ?)
-        ''', (nome, sobrenome, email, senha))
-        conexao.commit()
-        print(f"Usuário criado com sucesso!\nNome: {nome} {sobrenome}\nEmail: {email}")
-    except sqlite3.IntegrityError:
-        print(f"Erro: O email '{email}' já está em uso.")
-    finally:
-        conexao.close()
+            SELECT * FROM users WHERE email = ? AND senha = ?
+        ''', (email, senha))
+        user_data = cursor.fetchone()
 
-def login():
-    email = input('Entre seu email: ')
-    senha = input('Entre sua senha: ')
-    
-    
-    conexao = sqlite3.connect("usuarios.db")
-    cursor = conexao.cursor()
-    
-   
-    cursor.execute('''
-        SELECT * FROM users WHERE email = ? AND senha = ?
-    ''', (email, senha))
-    user = cursor.fetchone()
-    conexao.close()
-    
-    if user:
-        print(f"Login realizado com sucesso! Bem-vindo(a), {User[1]}!")
+    if user_data:
+        return {"nome": user_data[1], "sobrenome": user_data[2], "email": user_data[3]}
     else:
-        print("Email ou senha incorretos. Tente novamente.")
-
-
-    
-
-    
+        return None

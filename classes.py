@@ -1,5 +1,7 @@
+##### cria uma classse que seráa usada nas função 
 class User:
     def __init__(self, nome, sobrenome, email, senha):
+        print(f"Usuário {nome} {sobrenome} criado.")
         self.nome = nome
         self.sobrenome = sobrenome
         self.email = email

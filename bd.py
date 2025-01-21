@@ -1,7 +1,9 @@
+##### cria um bd com user 
+
 import sqlite3
 
 def criar_tabela_user():
-   
+    print("Criando a tabela de usuários...")
     conexao = sqlite3.connect("usuarios.db")  
     cursor = conexao.cursor()
     
