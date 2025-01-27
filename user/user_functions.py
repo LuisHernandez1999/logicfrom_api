@@ -41,6 +41,7 @@ def validar_user(email, senha):
         if user:
             print(f"Usuário encontrado: {user[1]} {user[2]} (Email: {user[3]})")
             return True  #
+          
         else:
             print("Usuário não encontrado ou credenciais incorretas.")
             return False  
@@ -50,3 +51,4 @@ def validar_user(email, senha):
         return False
     finally:
         conexao.close()  # Fecha a conexão com o banco
+       
