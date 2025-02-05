@@ -1,5 +1,5 @@
 # services/user_service.py
-from app_py.operations.repositores.user_repository import insert_user_into_db, get_user_data, validar_user
+from app_py.operations.repositories.user_repository import insert_user_into_db, get_user_data, validar_user
 import jwt
 from datetime import datetime, timedelta
 

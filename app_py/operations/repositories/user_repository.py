@@ -53,7 +53,7 @@ def get_user_data(email):
         if conexao:
             conexao.close()
 
-# Função para inserir um usuário no banco de dados
+# função para inserir um usuário no banco de dados
 def insert_user_into_db(nome, sobrenome, email, senha):
     try:
         conexao = psycopg2.connect(
