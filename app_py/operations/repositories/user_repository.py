@@ -23,7 +23,7 @@ def validar_user(email, senha):
         if conexao:
             conexao.close()
 
-# Função para obter os dados do usuário pelo email
+
 def get_user_data(email):
     try:
         conexao = psycopg2.connect(
@@ -44,7 +44,7 @@ def get_user_data(email):
                 "email": user_data[3]
             }
         else:
-            return None  # Retorna None se não encontrar o usuário
+            return None  
     except Exception as e:
         print(f"Erro ao buscar dados do usuário: {e}")
     finally:
@@ -64,7 +64,7 @@ def insert_user_into_db(nome, sobrenome, email, senha):
         )
         cursor = conexao.cursor()
 
-        # Insere os dados do usuário na tabela 'users'
+       
         cursor.execute('''
             INSERT INTO users (nome, sobrenome, email, senha)
             VALUES (%s, %s, %s, %s)
