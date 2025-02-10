@@ -38,14 +38,20 @@ def insert_expense():
 
 @expense_bp.route('/expenses/total', methods=['GET'])
 def get_total_expenses():
-   
     try:
         print("[INFO] Requisição para obter total de gastos")
         
+        # Chama o controlador para obter o total de gastos
         result, status = get_total_expenses_controller()
-        
+
+        # Verifica o status para evitar retorno incorreto
+        if status != 200:
+            print(f"[ERRO] Falha ao calcular o total de gastos, status: {status}")
+            return jsonify(result), status
+
         print(f"[INFO] Total de gastos calculado: {result}, Status: {status}")
         return jsonify(result), status
+
     except Exception as e:
         print(f"[ERRO] Falha ao calcular total de gastos: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500

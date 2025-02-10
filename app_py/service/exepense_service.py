@@ -38,26 +38,34 @@ def get_total_expenses_service():
     except Exception as e:
         return {"erro": f"Erro ao calcular o total de gastos: {str(e)}"}, 500
 
-def get_highest_expense_service():
-    
+def get_highest_expense_service(id_user):
     try:
-        result = get_highest_expense()
+        print(f"[INFO] Buscando o maior gasto para o id_user: {id_user}")
+        
+       
+        result = get_highest_expense(id_user)
 
        
-        if isinstance(result, tuple) and result[1] == 404:
-            return result  
+        if isinstance(result, dict) and "erro" in result:
+            print(f"[INFO] Erro ao buscar maior gasto: {result}")
+            return result, 404  
 
-        
-        return {
-            "id": result['id'],
-            "id_user": result['id_user'],
+       
+        result_dict = {
+            "id": int(result['id']),  
+            "id_user": int(result['id_user']),  
             "nome": result['nome'],
             "data": str(result['data']),
             "valor": float(result['valor']),
             "categoria": result['categoria']
         }
+
+        print(f"[INFO] Maior gasto encontrado: {result_dict}")
+        return result_dict, 200  
     except Exception as e:
+        print(f"[ERRO] Falha ao buscar maior gasto: {str(e)}")
         return {"erro": f"Erro ao buscar o maior gasto: {str(e)}"}, 500
+
 
 def get_category_with_highest_expense_service():
    

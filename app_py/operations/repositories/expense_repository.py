@@ -40,11 +40,12 @@ def insert_expense(id_user, nome, data, valor, categoria):
             conexao.close()
 
 
-def get_expenses_data():
-    """retorna todos os gastos registrados no banco """
+def get_expenses_data(id_user):
+    """Retorna os gastos registrados no banco de dados para um usuário específico."""
     conexao = None
     cursor = None
     try:
+        # Conectar ao banco de dados
         conexao = psycopg2.connect(
             host=DB_HOST,
             database=DB_NAME,
@@ -54,33 +55,44 @@ def get_expenses_data():
         )
         cursor = conexao.cursor()
 
-        cursor.execute("SELECT * FROM gastos;")
-        # cria um dataframe com todos os dados dos gastos
+        # Executar a consulta para buscar os gastos do usuário específico
+        cursor.execute("SELECT * FROM gastos WHERE id_user = %s;", (id_user,))
+
+        # Criar um DataFrame com os dados dos gastos
         colunas = [desc[0] for desc in cursor.description]
         df = pd.DataFrame(cursor.fetchall(), columns=colunas)
 
-        return df
+        if df.empty:
+            return None, 404  # Retorna status 404 se não houver dados
+
+        # Retorna os dados e o código de status 200 (sucesso)
+        return df, 200
 
     except Exception as e:
-        print(f"Erro ao buscar dados dos gastos: {e}")
-        return None
+        print(f"Erro ao obter os dados de gastos: {e}")
+        return None, 500  # Retorna status 500 em caso de erro
 
     finally:
+        # Certificar-se de fechar a conexão e o cursor
         if cursor:
             cursor.close()
         if conexao:
             conexao.close()
 
-
-def get_highest_expense():
-    """retorna o gasto com o maior valor registrado usando Pandas."""
-    df = get_expenses_data()
+def get_highest_expense(id_user):
+    """Retorna o gasto com o maior valor registrado usando Pandas, filtrando pelo id_user."""
+    print(f"[INFO] Buscando o maior gasto no banco de dados para id_user: {id_user}")
+    
+    df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
-        return {"erro": "Nenhum gasto encontrado."}, 404
+        print(f"[INFO] Nenhum gasto encontrado para o id_user: {id_user}. Retornando erro.")
+        return {"erro": "Nenhum gasto encontrado para o usuário."}, 404
 
     highest_expense = df.loc[df['valor'].idxmax()]
 
+    print(f"[INFO] Maior gasto encontrado: {highest_expense}")
+    
     return {
         "id": highest_expense['id'],
         "id_user": highest_expense['id_user'],
@@ -89,7 +101,6 @@ def get_highest_expense():
         "valor": float(highest_expense['valor']),
         "categoria": highest_expense['categoria']
     }
-
 
 def get_lowest_expense():
     """retorna o gasto com o menor valor registrado """
@@ -163,14 +174,14 @@ def get_expenses_count_by_category():
 
 
 
-def get_total_expenses():
-    """Retorna o total de gastos registrados no banco de dados."""
-    df = get_expenses_data()
+def get_total_expenses(id_user):
+    """Retorna o total de gastos registrados no banco de dados para um usuário específico."""
+    df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
         return {"erro": "Nenhum gasto encontrado."}, 404
 
-    total_gastos = df['valor'].sum()  
+    total_gastos = df['valor'].sum()
 
     return {
         "total_gastos": float(total_gastos)
