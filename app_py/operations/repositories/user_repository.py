@@ -2,8 +2,9 @@
 import psycopg2
 from datetime import datetime
 
-# função para validar o login de um usuário
 def validar_user(email, senha):
+    cursor = None
+    conexao = None
     try:
         conexao = psycopg2.connect(
             host="localhost",
@@ -12,12 +13,21 @@ def validar_user(email, senha):
             password="luis27"
         )
         cursor = conexao.cursor()
+        
+       
         cursor.execute('''SELECT * FROM users WHERE email = %s AND senha = %s''', (email, senha))
         user_data = cursor.fetchone()
+        
+        # retorna True se os dados do usuário foram encontrados, caso contrário, False
         return user_data is not None
+    
     except Exception as e:
+       
         print(f"Erro ao validar usuário: {e}")
+        return False 
+    
     finally:
+      
         if cursor:
             cursor.close()
         if conexao:
@@ -25,6 +35,8 @@ def validar_user(email, senha):
 
 
 def get_user_data(email):
+    cursor = None
+    conexao = None
     try:
         conexao = psycopg2.connect(
             host="localhost",
@@ -33,27 +45,36 @@ def get_user_data(email):
             password="luis27"
         )
         cursor = conexao.cursor()
-        cursor.execute('''SELECT * FROM users WHERE email = %s''', (email,))
+        
+        # consulta SQL
+        cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
         user_data = cursor.fetchone()
         
-        if user_data:
-            return {
-                "id": user_data[0],
-                "nome": user_data[1],
-                "sobrenome": user_data[2],
-                "email": user_data[3]
-            }
-        else:
-            return None  
+     
+        if not user_data:
+            raise Exception(f"Usuário com o email '{email}' não encontrado.")
+        
+       
+        user_dict = {
+            "id": user_data[0],         # id
+            "nome": user_data[1],       # nome 
+            "sobrenome": user_data[2],  # sobrenome 
+            "email": user_data[3]       # email 
+        }
+        
+        return user_dict
+    
     except Exception as e:
+       
         print(f"Erro ao buscar dados do usuário: {e}")
+        raise 
     finally:
+      
         if cursor:
             cursor.close()
         if conexao:
             conexao.close()
 
-# função para inserir um usuário no banco de dados
 def insert_user_into_db(nome, sobrenome, email, senha):
     try:
         conexao = psycopg2.connect(

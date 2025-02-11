@@ -141,7 +141,6 @@ def get_category_with_highest_expense(id_user):
     }
 
 def get_category_with_lowest_expense(id_user):
-    """retorna a categoria com o menor gasto e seu valor."""
     df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
@@ -161,16 +160,16 @@ def get_category_with_lowest_expense(id_user):
         }
     }    
 def get_expenses_count_by_category(id_user):
-    """retorna a quantidade de gastos por categoria."""
-    df = get_expenses_data()
+    
+    df = get_expenses_data(id_user)
 
     if df is None or df.empty:
         return {"erro": "Nenhum gasto encontrado."}, 404
 
-    # contar o número de gastos por categoria
+   
     categoria_contagem = df.groupby('categoria')['id'].count()
 
-    return categoria_contagem.to_dict()  # retorna um dicionário com a contagem por categoria
+    return categoria_contagem.to_dict() 
 
 
 

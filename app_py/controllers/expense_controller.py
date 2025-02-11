@@ -100,27 +100,55 @@ def get_category_with_highest_expense_controller():
     
 
 def get_expenses_count_by_category_controller():
-  
     try:
+        # Pegando o id_user da URL
+        id_user = request.args.get('id_user')
+
+        # Se id_user não for fornecido, tenta pegar do token (caso exista)
+        if not id_user:
+            id_user = get_user_from_token()
+
+        # Se id_user ainda não for encontrado, retorna erro
+        if not id_user:
+            return jsonify({"erro": "ID do usuário não encontrado. Por favor, forneça um ID de usuário válido ou faça login."}), 400
+
         print("[INFO] Iniciando processo para buscar contagem de gastos por categoria")
-        
-        result, status = get_expenses_count_by_category_service()
-        
+
+        # Passando o id_user para a função de serviço
+        result, status = get_expenses_count_by_category_service(id_user)
+
+        # Se o resultado for um erro, retorne o erro com o status adequado
+        if isinstance(result, dict) and 'erro' in result:
+            return jsonify(result), status
+
         print(f"[INFO] Contagem de gastos por categoria: {result}")
         return jsonify(result), status
+
     except Exception as e:
         print(f"[ERRO] Falha ao buscar contagem de gastos por categoria: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500
-
+    
 def get_category_with_lowest_expense_controller():
-  
     try:
+        # Pegando o id_user da URL
+        id_user = request.args.get('id_user')
+
+        # Se id_user não for fornecido, tenta pegar do token (caso exista)
+        if not id_user:
+            id_user = get_user_from_token()  
+
+        # Se id_user ainda não for encontrado, retorna erro
+        if not id_user:
+            return jsonify({"erro": "ID do usuário não encontrado. Por favor, forneça um ID de usuário válido ou faça login."}), 400
+        
         print("[INFO] Iniciando processo para buscar categoria com menor gasto")
         
-        result, status = get_category_with_lowest_expense_service()
+        # Passando o id_user para o serviço
+        result = get_category_with_lowest_expense_service(id_user)
         
         print(f"[INFO] Categoria com menor gasto encontrada: {result}")
-        return jsonify(result), status
+        return jsonify(result), 200
+
     except Exception as e:
         print(f"[ERRO] Falha ao buscar categoria com menor gasto: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500

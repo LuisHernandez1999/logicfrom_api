@@ -90,18 +90,35 @@ def get_category_with_highest_expense_service(id_user):
     }, 200 
 
 def get_expenses_count_by_category_service(id_user):
-   
     try:
-        result = get_expenses_count_by_category(id_user)
+
+        result, status_code = get_expenses_data(id_user)
+
+     
+        if status_code == 404:
+            return {"erro": "Dados não encontrados para o usuário."}, 404
 
        
-        if isinstance(result, tuple) and result[1] == 404:
-            return result  
+        if result.empty:
+            return {"erro": "Nenhum dado encontrado para a contagem de gastos por categoria."}, 404
+        
+      
+        result = result[result['valor'] > 0]  
 
-        return result
+      
+        if result.empty:
+            return {"erro": "Todas as categorias têm 0 gastos."}, 404
+
+      
+        result = result.groupby('categoria').size().reset_index(name='quantidade_de_gastos')
+
+       
+        return result.to_dict(orient='records'), 200
+
     except Exception as e:
         return {"erro": f"Erro ao buscar contagem de gastos por categoria: {str(e)}"}, 500
 
+    
 def get_category_with_lowest_expense_service(id_user):
     
     try:
@@ -109,7 +126,7 @@ def get_category_with_lowest_expense_service(id_user):
 
        
         if isinstance(result, tuple) and result[1] == 404:
-            return result  
+            return result,  
 
         return result
     except Exception as e:
