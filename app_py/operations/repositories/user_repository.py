@@ -18,7 +18,7 @@ def validar_user(email, senha):
         cursor.execute('''SELECT * FROM users WHERE email = %s AND senha = %s''', (email, senha))
         user_data = cursor.fetchone()
         
-        # retorna True se os dados do usuário foram encontrados, caso contrário, False
+        # retorna True se os dados do usuário foram encontrados caso contrário False
         return user_data is not None
     
     except Exception as e:
