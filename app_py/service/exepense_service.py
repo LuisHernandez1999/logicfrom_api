@@ -1,4 +1,5 @@
-from app_py.operations.repositories.expense_repository import insert_expense, get_expenses_count_by_category, get_highest_expense, get_expenses_data, get_category_with_highest_expense, get_category_with_lowest_expense
+from app_py.operations.repositories.expense_repository import insert_expense, get_expenses_count_by_category, get_highest_expense, get_expenses_data, get_category_with_highest_expense, get_category_with_lowest_expense,get_user_expenses
+from flask import request, jsonify
 
 def create_expend_service(data):
     try:
@@ -21,10 +22,10 @@ def create_expend_service(data):
     except Exception as e:
         return {"erro": f"Erro ao criar o gasto: {str(e)}"}, 500
 
-def get_total_expenses_service():
+def get_total_expenses_service(id_user):
    
     try:
-        df = get_expenses_data()
+        df = get_expenses_data(id_user)
 
        
         if df is None or df.empty:
@@ -67,24 +68,31 @@ def get_highest_expense_service(id_user):
         return {"erro": f"Erro ao buscar o maior gasto: {str(e)}"}, 500
 
 
-def get_category_with_highest_expense_service():
+def get_category_with_highest_expense_service(id_user):
+ 
+    df, status_code = get_expenses_data(id_user)
+
+    if df is None or df.empty:
+        return {"erro": "Nenhum gasto encontrado."}, 404 
+
+   
+    categoria_totais = df.groupby('categoria')['valor'].sum()
+
+   
+    categoria_maior_gasto = categoria_totais.idxmax()
+    valor_maior_gasto = categoria_totais.max()
+
+    return {  
+        "categoria_com_maior_gasto": {
+            "categoria": categoria_maior_gasto,
+            "valor": float(valor_maior_gasto)
+        }
+    }, 200 
+
+def get_expenses_count_by_category_service(id_user):
    
     try:
-        result = get_category_with_highest_expense()
-
-        
-        if isinstance(result, tuple) and result[1] == 404:
-            return result  
-
-        
-        return result
-    except Exception as e:
-        return {"erro": f"Erro ao buscar a categoria com maior gasto: {str(e)}"}, 500
-
-def get_expenses_count_by_category_service():
-   
-    try:
-        result = get_expenses_count_by_category()
+        result = get_expenses_count_by_category(id_user)
 
        
         if isinstance(result, tuple) and result[1] == 404:
@@ -94,10 +102,10 @@ def get_expenses_count_by_category_service():
     except Exception as e:
         return {"erro": f"Erro ao buscar contagem de gastos por categoria: {str(e)}"}, 500
 
-def get_category_with_lowest_expense_service():
+def get_category_with_lowest_expense_service(id_user):
     
     try:
-        result = get_category_with_lowest_expense()
+        result = get_category_with_lowest_expense(id_user)
 
        
         if isinstance(result, tuple) and result[1] == 404:
@@ -106,3 +114,20 @@ def get_category_with_lowest_expense_service():
         return result
     except Exception as e:
         return {"erro": f"Erro ao buscar a categoria com menor gasto: {str(e)}"}, 500
+
+def get_user_expenses_service():
+    try:
+        print("[INFO] Requisição para obter os gastos do usuário.")
+        
+       
+        result, status = get_user_expenses(request.args.get('id_user'))
+        
+        print(f"[INFO] Resultado das buscas: {result}, Status: {status}")
+        
+       
+        return jsonify(result), status
+
+    except Exception as e:
+        print(f"[ERRO] Falha ao buscar os gastos do usuário: {e}")
+      
+        return jsonify({"erro": "Erro interno no servidor."}), 500

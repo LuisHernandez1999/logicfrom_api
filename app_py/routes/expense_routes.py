@@ -7,6 +7,7 @@ from app_py.controllers.expense_controller import (
     get_category_with_highest_expense_controller,
     get_expenses_count_by_category_controller,
     get_category_with_lowest_expense_controller,
+    get_user_expenses_controller
 )
 
 expense_bp = Blueprint('expenses', __name__)
@@ -110,4 +111,18 @@ def get_category_with_lowest_expense():
         return jsonify(result), status
     except Exception as e:
         print(f"[ERRO] Falha ao buscar categoria com menor gasto: {e}")
+        return jsonify({"erro": "Erro interno no servidor"}), 500
+
+
+@expense_bp.route('/user/expenses', methods=['GET'])
+def user_expenses():
+    try:
+        print("[INFO] Requisição para obter os gastos por user")
+        
+        result, status = get_user_expenses_controller()
+        
+        print(f"[INFO] Resultado das buscas: {result}, Status: {status}")
+        return jsonify(result), status
+    except Exception as e:
+        print(f"[ERRO] Falha ao buscar gastos do user: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500

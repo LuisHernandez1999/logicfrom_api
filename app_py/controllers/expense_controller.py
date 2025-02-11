@@ -57,8 +57,8 @@ def get_highest_expense_controller():
     try:
         print("[INFO] Iniciando processo para buscar o maior gasto")
         
-        # Passar id_user para o serviço
-        id_user = request.args.get('id_user')  # Obtém o id_user da URL
+        # passar id_user para o serviço
+        id_user = request.args.get('id_user')  # obtém o id_user da URL
         if not id_user:
             return jsonify({"erro": "ID do usuário não fornecido."}), 400
 
@@ -74,17 +74,30 @@ def get_highest_expense_controller():
         return jsonify({"erro": "Erro interno no servidor"}), 500
 
 def get_category_with_highest_expense_controller():
-    
     try:
+        # Pegando o id_user da URL
+        id_user = request.args.get('id_user')
+
+        # Se id_user não for fornecido, tenta pegar do token (caso exista)
+        if not id_user:
+            id_user = get_user_from_token()  
+
+        # Se id_user ainda não for encontrado, retorna erro
+        if not id_user:
+            return jsonify({"erro": "ID do usuário não encontrado. Por favor, forneça um ID de usuário válido ou faça login."}), 400
+        
         print("[INFO] Iniciando processo para buscar categoria com maior gasto")
         
-        result, status = get_category_with_highest_expense_service()
+        # Chamando o serviço para obter a categoria com maior gasto
+        result, status = get_category_with_highest_expense_service(id_user)
         
         print(f"[INFO] Categoria com maior gasto encontrada: {result}")
         return jsonify(result), status
+
     except Exception as e:
         print(f"[ERRO] Falha ao buscar categoria com maior gasto: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500
+    
 
 def get_expenses_count_by_category_controller():
   
@@ -113,32 +126,31 @@ def get_category_with_lowest_expense_controller():
         return jsonify({"erro": "Erro interno no servidor"}), 500
 
 def get_total_expenses_controller():
-    """Retorna o total de gastos registrados no banco de dados para um usuário específico."""
+    
     try:
         print("[INFO] Iniciando processo para calcular o total de gastos")
 
-        # Obtendo o id_user da URL ou do token
-        id_user = request.args.get('id_user')  # Se passado via URL (por exemplo, ?id_user=1)
+        
+        id_user = request.args.get('id_user') 
 
-        # Se não passar o id_user, tenta pegar pelo token
+       
         if not id_user:
-            id_user = get_user_from_token()  # Obtém o id_user a partir do token
+            id_user = get_user_from_token()  
 
-        # Se não encontrar o id_user
+    
         if not id_user:
             return jsonify({"erro": "ID do usuário não encontrado. Por favor, forneça um ID de usuário válido ou faça login."}), 400
 
-        # Passa o id_user para a função get_expenses_data
+      
         df, status_code = get_expenses_data(id_user)
 
-        # Caso o dataframe esteja vazio ou não tenha gastos, retorna erro
+       
         if df is None or df.empty:
             return jsonify({"erro": "Nenhum gasto encontrado."}), 404
 
-        # Calculando o total de gastos
+       
         total_gastos = df['valor'].sum()
 
-        # Retornando o total de gastos no formato esperado
         return jsonify({
             "total_gastos": float(total_gastos)
         }), 200
@@ -146,3 +158,45 @@ def get_total_expenses_controller():
     except Exception as e:
         print(f"[ERRO] Falha ao calcular total de gastos: {e}")
         return jsonify({"erro": "Erro interno no servidor"}), 500
+    
+
+
+def get_user_expenses_controller():
+    try:
+        print("[INFO] Iniciando processo para obter os gastos do usuário.")
+
+        
+        id_user = request.args.get('id_user')
+
+      
+        if not id_user:
+            id_user = get_user_from_token()
+
+      
+        if not id_user:
+            return jsonify({"erro": "ID do usuário não encontrado. Por favor, forneça um ID de usuário válido ou faça login."}), 400
+
+        
+        df, status_code = get_expenses_data(id_user)
+
+       
+        if df is None or df.empty:
+            return jsonify({"erro": "Nenhum gasto encontrado para este usuário."}), 404
+
+      
+        expenses = []
+        for _, row in df.iterrows():
+            expenses.append({
+                "id": row["id"],
+                "id_user": row["id_user"],
+                "nome": row["nome"],
+                "data": row["data"].strftime("%Y-%m-%d") if row["data"] else None,
+                "valor": float(row["valor"]),
+                "categoria": row["categoria"]
+            })
+
+        return jsonify({"gastos": expenses}), 200
+
+    except Exception as e:
+        print(f"[ERRO] Falha ao obter gastos: {e}")
+        return jsonify({"erro": "Erro interno no servidor."}), 500

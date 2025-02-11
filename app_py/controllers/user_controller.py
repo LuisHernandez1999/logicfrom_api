@@ -7,7 +7,7 @@ SECRET_KEY = 'chave1'
 def login_user():
     data = request.get_json()
     try:
-        token, user_data = login_user_service(data)
+        token, user_data = login_user_service()
         
         # retorna a resposta com o token e os dados do usuário
         return jsonify({

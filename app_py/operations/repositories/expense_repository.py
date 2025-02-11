@@ -3,7 +3,7 @@ import pandas as pd
 from database.db import DB_HOST, DB_NAME, DB_USER, DB_PASSWORD
 
 def insert_expense(id_user, nome, data, valor, categoria):
-    """insere um gasto na tabela 'gastos'."""
+   
     try:
         conexao = psycopg2.connect(
             host=DB_HOST,
@@ -13,7 +13,7 @@ def insert_expense(id_user, nome, data, valor, categoria):
         )
         cursor = conexao.cursor()
 
-        # consulta para inserir um novo gasto
+      
         query = '''
             INSERT INTO gastos (id_user, nome, data, valor, categoria)
             VALUES (%s, %s, %s, %s, %s) RETURNING id;
@@ -21,7 +21,7 @@ def insert_expense(id_user, nome, data, valor, categoria):
         
         cursor.execute(query, (id_user, nome, data, valor, categoria))
         
-        # recuperar o ID do gasto recém-inserido
+       
         gasto_id = cursor.fetchone()[0]
 
         conexao.commit()
@@ -41,11 +41,11 @@ def insert_expense(id_user, nome, data, valor, categoria):
 
 
 def get_expenses_data(id_user):
-    """Retorna os gastos registrados no banco de dados para um usuário específico."""
+   
     conexao = None
     cursor = None
     try:
-        # Conectar ao banco de dados
+       
         conexao = psycopg2.connect(
             host=DB_HOST,
             database=DB_NAME,
@@ -55,32 +55,32 @@ def get_expenses_data(id_user):
         )
         cursor = conexao.cursor()
 
-        # Executar a consulta para buscar os gastos do usuário específico
+       
         cursor.execute("SELECT * FROM gastos WHERE id_user = %s;", (id_user,))
 
-        # Criar um DataFrame com os dados dos gastos
+      
         colunas = [desc[0] for desc in cursor.description]
         df = pd.DataFrame(cursor.fetchall(), columns=colunas)
 
         if df.empty:
-            return None, 404  # Retorna status 404 se não houver dados
+            return None, 404  
 
-        # Retorna os dados e o código de status 200 (sucesso)
+      
         return df, 200
 
     except Exception as e:
         print(f"Erro ao obter os dados de gastos: {e}")
-        return None, 500  # Retorna status 500 em caso de erro
+        return None, 500  
 
     finally:
-        # Certificar-se de fechar a conexão e o cursor
+      
         if cursor:
             cursor.close()
         if conexao:
             conexao.close()
 
 def get_highest_expense(id_user):
-    """Retorna o gasto com o maior valor registrado usando Pandas, filtrando pelo id_user."""
+   
     print(f"[INFO] Buscando o maior gasto no banco de dados para id_user: {id_user}")
     
     df, status_code = get_expenses_data(id_user)
@@ -102,8 +102,8 @@ def get_highest_expense(id_user):
         "categoria": highest_expense['categoria']
     }
 
-def get_lowest_expense():
-    """retorna o gasto com o menor valor registrado """
+def get_lowest_expense(id_user):
+    df, status_code = get_expenses_data(id_user)
     df = get_expenses_data()
 
     if df is None or df.empty:
@@ -119,9 +119,9 @@ def get_lowest_expense():
         "valor": float(lowest_expense['valor']),
         "categoria": lowest_expense['categoria']
     }
-def get_category_with_highest_expense():
-    """retorna a categoria com o maior gasto e seu valor."""
-    df = get_expenses_data()
+def get_category_with_highest_expense(id_user):
+  
+    df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
         return {"erro": "Nenhum gasto encontrado."}, 404
@@ -140,9 +140,9 @@ def get_category_with_highest_expense():
         }
     }
 
-def get_category_with_lowest_expense():
+def get_category_with_lowest_expense(id_user):
     """retorna a categoria com o menor gasto e seu valor."""
-    df = get_expenses_data()
+    df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
         return {"erro": "Nenhum gasto encontrado."}, 404
@@ -160,7 +160,7 @@ def get_category_with_lowest_expense():
             "valor": float(valor_menor_gasto)
         }
     }    
-def get_expenses_count_by_category():
+def get_expenses_count_by_category(id_user):
     """retorna a quantidade de gastos por categoria."""
     df = get_expenses_data()
 
@@ -175,7 +175,7 @@ def get_expenses_count_by_category():
 
 
 def get_total_expenses(id_user):
-    """Retorna o total de gastos registrados no banco de dados para um usuário específico."""
+  
     df, status_code = get_expenses_data(id_user)
 
     if df is None or df.empty:
@@ -185,4 +185,27 @@ def get_total_expenses(id_user):
 
     return {
         "total_gastos": float(total_gastos)
+    }
+
+
+def  get_user_expenses(id_user):
+  
+    df, status_code = get_expenses_data(id_user)
+
+    if df is None or df.empty:
+        return {"erro": "Nenhum gasto encontrado para o usuário."}, 404
+
+   
+    gastos = []
+    for _, row in df.iterrows():
+        gasto = {
+            "nome": row.get('nome'),
+            "data": str(row.get('data')),  
+            "valor": float(row.get('valor')),
+            "categoria": row.get('categoria')
+        }
+        gastos.append(gasto)
+
+    return {
+        "gastos": gastos
     }

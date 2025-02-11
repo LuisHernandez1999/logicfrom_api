@@ -2,7 +2,7 @@
 import psycopg2
 from datetime import datetime
 
-# Função para validar o login de um usuário
+# função para validar o login de um usuário
 def validar_user(email, senha):
     try:
         conexao = psycopg2.connect(
